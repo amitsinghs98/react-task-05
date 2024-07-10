@@ -1,91 +1,72 @@
 import React, { useState } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import TaskList from "./TaskList";
 import "./App.css";
 
-const ItemTypes = {
-  TASK: "task",
-};
-
-const Task = ({ task, index, moveTask }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemTypes.TASK,
-    item: { index },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  }));
-
-  return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} className="task">
-      {task}
-    </div>
-  );
-};
-
-const Column = ({ name, tasks, moveTask }) => {
-  const [, drop] = useDrop(() => ({
-    accept: ItemTypes.TASK,
-    drop: (item) => moveTask(item.index, name),
-  }));
-
-  return (
-    <div ref={drop} className="column">
-      <h2>{name}</h2>
-      {tasks.map((task, index) => (
-        <Task key={index} index={index} task={task} moveTask={moveTask} />
-      ))}
-    </div>
-  );
-};
-
 const App = () => {
-  const [columns, setColumns] = useState({
-    Unplanned: [
-      "Task 1",
-      "Task 2",
-      "Task 3",
-      "Task 4",
-      "Task 5",
-      "Task 6",
-      "Task 7",
-      "Task 8",
-      "Task 9",
-    ],
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-  });
+  const initialTasks = [
+    { id: 1, text: "Task 1" },
+    { id: 2, text: "Task 2" },
+    { id: 3, text: "Task 3" },
+    { id: 4, text: "Task 4" },
+    { id: 5, text: "Task 5" },
+    { id: 6, text: "Task 6" },
+    { id: 7, text: "Task 7" },
+    { id: 8, text: "Task 8" },
+    { id: 9, text: "Task 9" },
+  ];
 
-  const moveTask = (taskIndex, columnName) => {
-    const task = columns.Unplanned[taskIndex];
-    setColumns((prevColumns) => {
-      const newColumns = { ...prevColumns };
-      newColumns.Unplanned.splice(taskIndex, 1);
-      newColumns[columnName].push(task);
-      return newColumns;
+  const [taskLists, setTaskLists] = useState([
+    { title: "Unplanned", tasks: initialTasks },
+    { title: "Monday", tasks: [] },
+    { title: "Tuesday", tasks: [] },
+    { title: "Wednesday", tasks: [] },
+    { title: "Thursday", tasks: [] },
+  ]);
+
+  const handleDrop = (task, targetListTitle) => {
+    const targetListIndex = taskLists.findIndex(
+      (list) => list.title === targetListTitle
+    );
+
+    if (taskLists[targetListIndex].tasks.some((t) => t.id === task.id)) {
+      return;
+    }
+
+    const updatedLists = taskLists.map((list, index) => {
+      if (index === targetListIndex) {
+        return {
+          ...list,
+          tasks: [...list.tasks, task].sort((a, b) => a.id - b.id),
+        };
+      } else {
+        return { ...list, tasks: list.tasks.filter((t) => t.id !== task.id) };
+      }
     });
+
+    setTaskLists(updatedLists);
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <>
+      {" "}
+      <h2>Task 5: Drag & Drop Task List</h2>
       <div className="App">
-        <Column
-          name="Unplanned"
-          tasks={columns.Unplanned}
-          moveTask={moveTask}
-        />
-        <Column name="Monday" tasks={columns.Monday} moveTask={moveTask} />
-        <Column name="Tuesday" tasks={columns.Tuesday} moveTask={moveTask} />
-        <Column
-          name="Wednesday"
-          tasks={columns.Wednesday}
-          moveTask={moveTask}
-        />
-        <Column name="Thursday" tasks={columns.Thursday} moveTask={moveTask} />
+        <DndProvider backend={HTML5Backend}>
+          <div style={{ display: "flex" }}>
+            {taskLists.map((list, index) => (
+              <TaskList
+                key={index}
+                title={list.title}
+                tasks={list.tasks}
+                onDrop={(task) => handleDrop(task, list.title)}
+              />
+            ))}
+          </div>
+        </DndProvider>
       </div>
-    </DndProvider>
+    </>
   );
 };
 
