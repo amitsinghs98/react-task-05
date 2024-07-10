@@ -51,7 +51,7 @@ const App = () => {
   return (
     <>
       {" "}
-      <h2>Task 5: Drag & Drop Task List</h2>
+      <h2>Drag AND Drop</h2>
       <div className="App">
         <DndProvider backend={HTML5Backend}>
           <div style={{ display: "flex" }}>
